@@ -23,11 +23,11 @@ def index():
        if session['room']  not in rooms:
           rooms.append(session['room'])
        if session['room'] not in roomchat.keys():
-          roomchat[session['room']] = deque()
+          roomchat.update({session['room']: deque()})
        return render_template("channel.html", room=session['room'], user=session['user'], msgs=roomchat[session['room']])
     if request.method == "GET":
        if session.get('user') != None and session.get('room') != None:
-          return render_template("channel.html", room=session['room'], user=session['user'], msgs=roomchat)
+          return render_template("channel.html", room=session['room'], user=session['user'], msgs=roomchat[session['room']])
        return render_template("home.html", room=rooms)
 
 @socketio.on('message')
