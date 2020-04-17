@@ -11,6 +11,11 @@ socketio = SocketIO(app)
 rooms = ["default"]
 userlogged = ["default"]
 roomchat = dict()
+securerooms = dict()
+secureusers = []
+limitusers = dict()
+
+#loging in users, creating rooms
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -30,6 +35,28 @@ def index():
           return render_template("channel.html", room=session['room'], user=session['user'], msgs=roomchat[session['room']])
        return render_template("home.html", room=rooms)
 
+#private chat login
+@app.route("/private", methods=["GET", "POST"])
+def private():
+    if request.method == "POST":
+       user = request.form.get("user")
+       room = request.form.get("cname")
+       pwd =  request.form.get("pwd")
+       if room not in securerooms:
+           securerooms.update({room: pwd})
+       if pwd != securerooms[room]:
+           return "wrong password"
+       if user  in secureusers:
+          return "username exists"
+       secureusers.append(user)
+       limitusers.update({room: secureusers})
+       if len(limitusers[room]) >2:
+          return "Its an 1 to 1 chatroom, and its full"
+       return render_template("pchat.html", room=room, user=user)
+    return render_template("private.html")
+
+#sending msg to users
+
 @socketio.on('message')
 def message(data):
     uname = session.get('user')
@@ -43,6 +70,17 @@ def message(data):
     join_room(cname)
     emit('roommsg', {'user': uname, 'time':timestamp, 'msg':msg}, room=cname)
 
+@socketio.on('pmessage')
+def pmessage(data):
+    uname = data["user"]
+    cname = data["room"]
+    msg = data["msg"]
+    time = datetime.now()
+    timestamp = time.strftime("%Y-%m-%d %H:%M")
+    join_room(cname)
+    emit('securemsg', {'user': uname, 'time':timestamp, 'msg':msg}, room=cname)
+
+#logging out users
 
 @app.route("/logout", methods=['GET'])
 def logout():
@@ -51,6 +89,10 @@ def logout():
     except ValueError:
         pass
     session.clear()
+    return redirect("/")
+
+@app.route("/plogout", methods=['GET'])
+def plogout():
     return redirect("/")
 
 
