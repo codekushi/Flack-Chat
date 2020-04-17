@@ -1,6 +1,6 @@
 <!doctype HTML>
 <head>
-<title>Chat</title>
+<title>Private Chat</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -11,9 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelector('#msgsend').onclick = () => {
         var msg = $('#msgtext').val();
         $('#msgtext').val('');
-        socket.emit('message', {'msg': msg});
+        var user = document.querySelector('#user').innerHTML;
+        var room = document.querySelector('#room').innerHTML;
+        socket.emit('pmessage', {'user': user, 'room': room, 'msg': msg});
         }
-        socket.on ('roommsg', data => {
+        socket.on ('securemsg', data => {
         const li = document.createElement('li');
         li.innerHTML = `${data.user}`+'::'+'<strong>'+`${data.msg}`+"</strong>"+'--'+`${data.time}`;
         document.querySelector('#messages').append(li);
@@ -22,17 +24,15 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </head>
 <body>
-<h1 align="center">Flack Chat-{{ room }}</h1>
-<h2 align="center">Display Name-{{ user }}</h2>
+<h1 align="center" id="room">{{ room }}</h1>
+<h2 align="center" id="user">{{ user }}</h2>
 <div class="container" style="width: 100%;">
 <div align="left" style="float: left; width: 20%;">
-<a href="/logout"><button type="button" class="btn btn-primary btn-lg btn-block">Logout</button></a>
+<h3>for Security reasons private chats won't have stored messages in server nor in browser, If you close the tab or logout your session will be lost and can't be recovered</h3>
+<a href="/plogout"><button type="button" class="btn btn-primary btn-lg btn-block">Logout</button></a>
 </div>
 <div class="container" style="float:left; width:80%;">
 <div id="messages">
-{% for uname, msg, timestamp in msgs %}
-<li>{{ uname }}::<strong>{{ msg }}</strong>--{{ timestamp }}</li>
-{% endfor %}
 </div>
 <div class="fixed-bottom">
 <form action="javascript:void(0);">
@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <input type="submit" class="btn btn-primary" id="msgsend" value="send">
 </div>
 </form>
-</div>
 </div>
 </div>
 </div>
