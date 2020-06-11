@@ -3,10 +3,11 @@ from datetime import datetime
 from flask import Flask, render_template, request, url_for, redirect, session
 from flask_socketio import *
 from collections import deque
-
+import eventlet
+eventlet.monkey_patch()
 app = Flask(__name__)
 app.config["SECRET_KEY"] = 'cs50project2bykushwanth'
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 rooms = ["default"]
 userlogged = ["default"]
@@ -91,8 +92,17 @@ def logout():
     session.clear()
     return redirect("/")
 
-@app.route("/plogout", methods=['GET'])
+@app.route("/plogout", methods=['GET', 'POST'])
 def plogout():
+    if request.method == "POST":
+       puser = request.form.get("puser")
+       proom = request.form.get("proom")
+    try:
+        secureusers.remove(puser)
+    except ValueError:
+        pass
+    if len(securerooms[proom]) == 0:
+        securerooms.pop(proom)
     return redirect("/")
 
 
